@@ -147,12 +147,41 @@ footer{text-align:center;padding:25px;color:#73809a;font-size:12px;border-top:1p
       <div class="field"><label for="authEmail">Email address</label><input id="authEmail" type="email" required autocomplete="email" placeholder="you@example.com"></div>
       <div class="field"><label for="authPassword">Password</label><input id="authPassword" type="password" required minlength="6" autocomplete="current-password" placeholder="At least 6 characters"></div>
       <div id="roleField" class="field hidden"><label for="authRole">I am joining as</label><select id="authRole"><option value="candidate">Candidate</option><option value="recruiter">Recruiter</option></select></div>
+      <div id="recoveryFields" class="hidden">
+        <div class="field"><label for="recoveryQuestion">Recovery question</label><select id="recoveryQuestion"><option value="">Choose a recovery question</option><option value="What was the name of your first school?">What was the name of your first school?</option><option value="What city were you born in?">What city were you born in?</option><option value="What was the name of your first pet?">What was the name of your first pet?</option><option value="What is the name of your childhood best friend?">What is the name of your childhood best friend?</option><option value="What was your childhood nickname?">What was your childhood nickname?</option><option value="What is your favourite book?">What is your favourite book?</option></select></div>
+        <div class="field"><label for="recoveryAnswer">Your answer</label><input id="recoveryAnswer" autocomplete="off" placeholder="Enter your answer"></div>
+      </div>
       <div id="authMsg" class="notice hidden"></div>
       <button class="primary" id="authSubmit" type="submit" style="width:100%">Sign in</button>
     </form>
+    <button class="secondary small" id="forgotPasswordButton" onclick="openForgotPassword()" style="margin-top:12px">Forgot password?</button>
     <button class="secondary small" onclick="showPage('home')" style="margin-top:12px">Back to home</button>
   </div>
   <p class="tiny">Prototype note: accounts are stored locally in this browser. Do not use real or reused passwords.</p>
+</section>
+
+<section id="forgotPasswordPage" class="page">
+  <div class="page-head"><div><div class="eyebrow">Account recovery</div><h2>Reset your password</h2><p>Verify your email and answer your recovery question to continue.</p></div></div>
+  <div class="panel" style="max-width:580px">
+    <form id="recoveryEmailForm">
+      <div class="field"><label for="recoveryEmail">Email address</label><input id="recoveryEmail" type="email" required autocomplete="email" placeholder="you@example.com"></div>
+      <div id="recoveryEmailMsg" class="notice hidden"></div>
+      <button class="primary" type="submit">Continue</button>
+    </form>
+    <form id="recoveryAnswerForm" class="hidden">
+      <div class="field"><label for="recoveryPrompt">Your recovery question</label><input id="recoveryPrompt" readonly></div>
+      <div class="field"><label for="recoveryCheckAnswer">Your answer</label><input id="recoveryCheckAnswer" required autocomplete="off" placeholder="Enter your answer"></div>
+      <div id="recoveryAnswerMsg" class="notice hidden"></div>
+      <button class="primary" type="submit">Verify answer</button>
+    </form>
+    <form id="changePasswordForm" class="hidden">
+      <div class="field"><label for="newPassword">New password</label><input id="newPassword" type="password" required minlength="6" autocomplete="new-password" placeholder="At least 6 characters"></div>
+      <div class="field"><label for="confirmNewPassword">Confirm new password</label><input id="confirmNewPassword" type="password" required minlength="6" autocomplete="new-password" placeholder="Re-enter new password"></div>
+      <div id="changePasswordMsg" class="notice hidden"></div>
+      <button class="primary" type="submit">Change password</button>
+    </form>
+    <button class="secondary small" onclick="showPage('auth');setAuthMode('login')" style="margin-top:12px">Back to sign in</button>
+  </div>
 </section>
 
 <section id="recruiter" class="page">
@@ -408,6 +437,8 @@ function setAuthMode(mode) {
   $("authSubmit").textContent = mode === "signup" ? "Create account" : "Sign in";
   $("nameField").classList.toggle("hidden", mode !== "signup");
   $("roleField").classList.toggle("hidden", mode !== "signup");
+  $("recoveryFields").classList.toggle("hidden", mode !== "signup");
+  $("forgotPasswordButton").classList.toggle("hidden", mode !== "login");
   $("loginTab").style.borderColor = mode === "login" ? "var(--accent)" : "";
   $("signupTab").style.borderColor = mode === "signup" ? "var(--accent)" : "";
   hideNotice("authMsg");
@@ -419,10 +450,13 @@ $("authForm").addEventListener("submit", event => {
   if (authMode === "signup") {
     const name = $("authName").value.trim();
     const role = $("authRole").value;
+    const recoveryQuestion = $("recoveryQuestion").value;
+    const recoveryAnswer = $("recoveryAnswer").value.trim();
     if (!name) return notice("authMsg","Please enter your full name.","error");
+    if (!recoveryQuestion || !recoveryAnswer) return notice("authMsg","Please choose a recovery question and enter your answer.","error");
     const all = users();
     if (all.some(user => user.email === email)) return notice("authMsg","An account with this email already exists.","error");
-    const user = {id:uid(),name,email,password,role,createdAt:new Date().toISOString()};
+    const user = {id:uid(),name,email,password,role,recoveryQuestion,recoveryAnswer:recoveryAnswer.toLocaleLowerCase(),createdAt:new Date().toISOString()};
     all.push(user); write(STORE.users,all);
     write(STORE.current,{id:user.id,name:user.name,email:user.email,role:user.role});
     enterDashboard();
@@ -433,6 +467,58 @@ $("authForm").addEventListener("submit", event => {
     enterDashboard();
   }
 });
+let recoveryUserId = null;
+function openForgotPassword() {
+  recoveryUserId = null;
+  $("recoveryEmailForm").classList.remove("hidden");
+  $("recoveryAnswerForm").classList.add("hidden");
+  $("changePasswordForm").classList.add("hidden");
+  $("recoveryEmailForm").reset();
+  $("recoveryAnswerForm").reset();
+  $("changePasswordForm").reset();
+  hideNotice("recoveryEmailMsg"); hideNotice("recoveryAnswerMsg"); hideNotice("changePasswordMsg");
+  showPage("forgotPasswordPage");
+}
+$("recoveryEmailForm").addEventListener("submit", event => {
+  event.preventDefault();
+  const email = $("recoveryEmail").value.trim().toLowerCase();
+  const user = users().find(item => item.email === email);
+  if (!user) return notice("recoveryEmailMsg","No account was found for that email address.","error");
+  if (!user.recoveryQuestion || !user.recoveryAnswer) return notice("recoveryEmailMsg","This account does not have a recovery question set. Please contact your administrator or create a new account.","error");
+  recoveryUserId = user.id;
+  $("recoveryPrompt").value = user.recoveryQuestion;
+  $("recoveryEmailForm").classList.add("hidden");
+  $("recoveryAnswerForm").classList.remove("hidden");
+  hideNotice("recoveryAnswerMsg");
+});
+$("recoveryAnswerForm").addEventListener("submit", event => {
+  event.preventDefault();
+  const user = users().find(item => item.id === recoveryUserId);
+  if (!user || $("recoveryCheckAnswer").value.trim().toLocaleLowerCase() !== String(user.recoveryAnswer || "").toLocaleLowerCase()) {
+    return notice("recoveryAnswerMsg","The recovery answer is incorrect. Please try again.","error");
+  }
+  $("recoveryAnswerForm").classList.add("hidden");
+  $("changePasswordForm").classList.remove("hidden");
+  hideNotice("changePasswordMsg");
+});
+$("changePasswordForm").addEventListener("submit", event => {
+  event.preventDefault();
+  const password = $("newPassword").value;
+  if (password.length < 6) return notice("changePasswordMsg","Password must be at least 6 characters.","error");
+  if (password !== $("confirmNewPassword").value) return notice("changePasswordMsg","The passwords do not match.","error");
+  const all = users();
+  const index = all.findIndex(item => item.id === recoveryUserId);
+  if (index < 0) return notice("changePasswordMsg","Account could not be found. Please restart password recovery.","error");
+  all[index].password = password;
+  write(STORE.users, all);
+  recoveryUserId = null;
+  notice("changePasswordMsg","Password changed successfully. You can now sign in with your new password.","success");
+  $("changePasswordForm").reset();
+  $("changePasswordForm").classList.add("hidden");
+  $("recoveryEmailForm").classList.remove("hidden");
+  $("recoveryEmailForm").reset();
+});
+
 function logout() {
   localStorage.removeItem(STORE.current);
   currentAssessmentId=null;

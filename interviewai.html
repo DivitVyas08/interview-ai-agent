@@ -1,0 +1,955 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>InterviewAI — Smarter Hiring</title>
+<script src="https://unpkg.com/mammoth@1.9.0/mammoth.browser.min.js"></script>
+<style>
+:root {
+  --bg:#0b1020;--panel:#131b30;--panel2:#19243c;--line:#293650;
+  --text:#edf2ff;--muted:#a0aec7;--accent:#8b7cff;--accent2:#5ce1c1;
+  --danger:#ff727f;--warning:#ffcc78;--radius:18px;
+}
+*{box-sizing:border-box}
+body{margin:0;background:radial-gradient(ellipse at top,#18254a 0%,var(--bg) 55%);color:var(--text);font:15px/1.55 Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;min-height:100vh}
+button,input,select,textarea{font:inherit}
+button{cursor:pointer;border:0;border-radius:11px;padding:11px 16px;font-weight:700;transition:.15s}
+button:disabled{opacity:.5;cursor:not-allowed}
+.primary{background:var(--accent);color:white}
+.primary:hover:not(:disabled){filter:brightness(1.1);transform:translateY(-1px)}
+.secondary{background:#273451;color:var(--text);border:1px solid #3a4866}
+.danger{background:#492432;color:#ffb4bc;border:1px solid #71404e}
+.small{font-size:13px;padding:7px 10px}
+a{color:#bdb4ff}
+.topbar{height:76px;display:flex;align-items:center;justify-content:space-between;padding:0 clamp(18px,5vw,72px);border-bottom:1px solid #ffffff12;background:#0b1020bb;backdrop-filter:blur(14px);position:sticky;top:0;z-index:5}
+.brand{display:flex;gap:11px;align-items:center;font-size:20px;font-weight:850;letter-spacing:-.6px}
+.logo{height:39px;width:39px;border-radius:13px;background:linear-gradient(135deg,#8b7cff,#5ce1c1);display:grid;place-items:center;color:#10172a;font-weight:950;font-size:20px}
+.nav-actions{display:flex;gap:9px;align-items:center}
+main{max-width:1120px;padding:38px 22px 70px;margin:auto}
+.page{display:none}.page.active{display:block}
+.hero{padding:58px 0 42px;display:grid;grid-template-columns:1.25fr .75fr;gap:34px;align-items:center}
+.eyebrow{color:var(--accent2);font-size:12px;font-weight:850;letter-spacing:1.7px;text-transform:uppercase}
+h1{font-size:clamp(38px,6vw,65px);line-height:1.05;letter-spacing:-2.8px;margin:15px 0 20px}
+h2{font-size:27px;letter-spacing:-.8px;margin:0 0 8px}
+h3{margin:0 0 9px;font-size:17px}
+p{color:var(--muted);margin:8px 0 17px}
+.hero .lead{font-size:18px;max-width:600px}
+.gradient-text{background:linear-gradient(90deg,#b9b0ff,#5ce1c1);-webkit-background-clip:text;background-clip:text;color:transparent}
+.hero-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:24px}
+.hero-card,.panel,.stat,.feature{background:linear-gradient(145deg,#17213a,#10182b);border:1px solid var(--line);border-radius:var(--radius)}
+.hero-card{padding:25px;box-shadow:0 20px 70px #0003}
+.mock-row{display:flex;justify-content:space-between;align-items:center;padding:13px 0;border-bottom:1px solid #ffffff12;gap:10px}
+.mock-row:last-child{border-bottom:0}
+.pill{font-size:11px;border-radius:99px;padding:4px 9px;background:#2a3652;color:#cbd5ef;white-space:nowrap}
+.pill.green{background:#173f3b;color:#8ef0d8}
+.features{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:25px}
+.feature{padding:21px}
+.feature .symbol{font-size:23px;margin-bottom:12px}
+.feature h3{margin-bottom:6px}
+.page-head{display:flex;justify-content:space-between;gap:20px;align-items:flex-start;margin:5px 0 25px}
+.panel{padding:24px;margin-bottom:18px}
+.panel-header{display:flex;justify-content:space-between;align-items:flex-start;gap:15px;margin-bottom:16px}
+.grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:15px}
+.grid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+.field{display:flex;flex-direction:column;gap:7px;margin-bottom:14px}
+label{font-size:13px;color:#d6def1;font-weight:700}
+input,select,textarea{width:100%;background:#0d1527;border:1px solid #34415d;border-radius:10px;padding:12px;color:var(--text);outline:none}
+input:focus,select:focus,textarea:focus{border-color:var(--accent);box-shadow:0 0 0 3px #8b7cff22}
+input[type=checkbox]{width:auto;accent-color:var(--accent)}
+textarea{resize:vertical;min-height:100px}
+.form-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}
+.notice{border:1px solid var(--line);border-radius:12px;padding:12px 14px;color:var(--muted);margin:12px 0}
+.notice.success{border-color:#28695d;background:#12352f;color:#a6f0db}
+.notice.error{border-color:#77404c;background:#391d2a;color:#ffc0c7}
+.notice.info{background:#17243c}
+.muted{color:var(--muted)}
+.tiny{font-size:12px}
+.hidden{display:none!important}
+.stat{padding:19px}
+.stat strong{font-size:28px;display:block;letter-spacing:-1px}
+.stat span{font-size:12px;color:var(--muted)}
+.assessment-card{padding:20px;border:1px solid var(--line);background:#131c30;border-radius:15px;margin:12px 0}
+.assessment-card p{margin:6px 0}
+.code{font-size:25px;font-weight:900;letter-spacing:4px;color:var(--accent2)}
+.progress{height:7px;background:#27334d;border-radius:99px;overflow:hidden;margin:13px 0 20px}
+.progress span{height:100%;display:block;background:linear-gradient(90deg,var(--accent),var(--accent2));width:0%;transition:width .2s}
+.question{font-size:21px;line-height:1.4;margin:15px 0 22px}
+.option{display:flex;gap:11px;align-items:flex-start;border:1px solid #34415d;background:#10182b;border-radius:12px;padding:13px;margin:9px 0;cursor:pointer}
+.option:has(input:checked){border-color:var(--accent);background:#252448}
+.option input{width:auto;margin-top:5px}
+.video-wrap{background:#050810;border:1px solid var(--line);border-radius:14px;overflow:hidden;max-width:680px}
+video{display:block;width:100%;max-height:430px;background:#050810}
+.answer-layout{display:grid;grid-template-columns:1.1fr .9fr;gap:18px}
+.recording-dot{display:inline-block;width:9px;height:9px;background:#ff6577;border-radius:50%;margin-right:7px;box-shadow:0 0 0 4px #ff657722}
+.report-item{padding:15px 0;border-bottom:1px solid #ffffff12}
+.report-item:last-child{border-bottom:0}
+pre{white-space:pre-wrap;overflow-wrap:anywhere;background:#0c1425;border:1px solid var(--line);padding:12px;border-radius:10px;color:#d8e2f8}
+hr{border:0;border-top:1px solid #ffffff15;margin:20px 0}
+footer{text-align:center;padding:25px;color:#73809a;font-size:12px;border-top:1px solid #ffffff10}
+@media(max-width:760px){
+ .hero{grid-template-columns:1fr;padding-top:28px}.features,.grid3{grid-template-columns:1fr}
+ .grid2,.answer-layout{grid-template-columns:1fr}.topbar{padding:0 15px;height:67px}
+ main{padding:25px 15px 50px}.panel{padding:18px}.nav-actions .secondary{display:none}
+ h1{letter-spacing:-1.7px}
+}
+</style>
+</head>
+<body>
+<header class="topbar">
+  <div class="brand"><div class="logo">I</div>InterviewAI</div>
+  <div class="nav-actions" id="navActions">
+    <button class="secondary" onclick="showPage('home')">Home</button>
+    <button class="secondary" onclick="showPage('auth')">Sign in</button>
+    <button class="primary" onclick="showPage('auth');setAuthMode('signup')">Create account</button>
+  </div>
+</header>
+
+<main>
+<section id="home" class="page active">
+  <div class="hero">
+    <div>
+      <div class="eyebrow">AI-assisted hiring platform</div>
+      <h1>Better interviews.<br><span class="gradient-text">Smarter hiring.</span></h1>
+      <p class="lead">Create assessments, evaluate candidates, conduct recorded interviews, and review results from one simple portal.</p>
+      <div class="hero-actions">
+        <button class="primary" onclick="showPage('auth');setAuthMode('signup')">Get started</button>
+        <button class="secondary" onclick="showPage('auth');setAuthMode('login')">Sign in</button>
+      </div>
+      <p class="tiny">A browser-based prototype for recruiter and candidate workflows.</p>
+    </div>
+    <div class="hero-card">
+      <div class="eyebrow">Assessment overview</div>
+      <h2 style="margin-top:8px">One workflow, clear results</h2>
+      <div class="mock-row"><span>Knowledge assessment</span><span class="pill">MCQs</span></div>
+      <div class="mock-row"><span>Resume-informed interview</span><span class="pill">DOCX</span></div>
+      <div class="mock-row"><span>Full-session recording</span><span class="pill green">Playback</span></div>
+      <div class="mock-row"><span>Recruiter result portal</span><span class="pill">Reports</span></div>
+    </div>
+  </div>
+  <div class="features">
+    <div class="feature"><div class="symbol">✦</div><h3>Structured assessments</h3><p>Set the role, difficulty, MCQ count, interview questions, and time limits.</p></div>
+    <div class="feature"><div class="symbol">▤</div><h3>Resume-aware questions</h3><p>Upload a DOCX resume and use its extracted text to personalize interview prompts.</p></div>
+    <div class="feature"><div class="symbol">◉</div><h3>Recorded sessions</h3><p>Record the full test and interview, then review the saved video in the results portal.</p></div>
+  </div>
+</section>
+
+<section id="auth" class="page">
+  <div class="page-head"><div><div class="eyebrow">Welcome to InterviewAI</div><h2 id="authTitle">Sign in to your account</h2><p id="authSubtitle">Access your recruiter or candidate dashboard.</p></div></div>
+  <div class="panel" style="max-width:580px">
+    <div class="grid2">
+      <button class="secondary" id="loginTab" onclick="setAuthMode('login')">Sign in</button>
+      <button class="secondary" id="signupTab" onclick="setAuthMode('signup')">Create account</button>
+    </div>
+    <form id="authForm">
+      <div id="nameField" class="field hidden"><label for="authName">Full name</label><input id="authName" autocomplete="name" placeholder="Your name"></div>
+      <div class="field"><label for="authEmail">Email address</label><input id="authEmail" type="email" required autocomplete="email" placeholder="you@example.com"></div>
+      <div class="field"><label for="authPassword">Password</label><input id="authPassword" type="password" required minlength="6" autocomplete="current-password" placeholder="At least 6 characters"></div>
+      <div id="roleField" class="field hidden"><label for="authRole">I am joining as</label><select id="authRole"><option value="candidate">Candidate</option><option value="recruiter">Recruiter</option></select></div>
+      <div id="authMsg" class="notice hidden"></div>
+      <button class="primary" id="authSubmit" type="submit" style="width:100%">Sign in</button>
+    </form>
+    <button class="secondary small" onclick="showPage('home')" style="margin-top:12px">Back to home</button>
+  </div>
+  <p class="tiny">Prototype note: accounts are stored locally in this browser. Do not use real or reused passwords.</p>
+</section>
+
+<section id="recruiter" class="page">
+  <div class="page-head">
+    <div><div class="eyebrow">Recruiter workspace</div><h2>Recruiter dashboard</h2><p>Create assessments and review candidate submissions.</p></div>
+    <button class="secondary" onclick="logout()">Sign out</button>
+  </div>
+  <div class="grid3" style="margin-bottom:20px">
+    <div class="stat"><strong id="statAssessments">0</strong><span>Assessments created</span></div>
+    <div class="stat"><strong id="statCandidates">0</strong><span>Candidate submissions</span></div>
+    <div class="stat"><strong id="statCompleted">0</strong><span>Completed assessments</span></div>
+  </div>
+  <div class="panel">
+    <h2>Create an assessment</h2>
+    <p>Configure an assessment and share its room code with candidates.</p>
+    <form id="assessmentForm">
+      <div class="grid2">
+        <div class="field"><label for="jobTitle">Job title</label><input id="jobTitle" required placeholder="e.g. Frontend Developer"></div>
+        <div class="field"><label for="domain">Domain / specialization</label><input id="domain" required placeholder="e.g. Web development"></div>
+        <div class="field"><label for="level">Difficulty level</label><select id="level"><option>Entry level</option><option selected>Intermediate</option><option>Advanced</option></select></div>
+        <div class="field"><label for="mcqCount">Number of MCQs</label><select id="mcqCount"><option value="3">3</option><option value="5" selected>5</option><option value="10">10</option></select></div>
+        <div class="field"><label for="interviewCount">Spoken interview questions</label><select id="interviewCount"><option value="2">2</option><option value="3" selected>3</option><option value="5">5</option></select></div>
+        <div class="field"><label for="mcqMinutes">MCQ time limit (minutes)</label><select id="mcqMinutes"><option value="5">5</option><option value="10" selected>10</option><option value="15">15</option><option value="20">20</option></select></div>
+        <div class="field"><label for="interviewMinutes">Interview time limit (minutes)</label><select id="interviewMinutes"><option value="5">5</option><option value="10" selected>10</option><option value="15">15</option><option value="20">20</option></select></div>
+      </div>
+      <div class="field"><label for="assessmentNotes">Additional instructions (optional)</label><textarea id="assessmentNotes" placeholder="Skills or topics you want candidates to focus on"></textarea></div>
+      <button class="primary" type="submit">Create assessment</button>
+      <div id="createMsg" class="notice hidden"></div>
+    </form>
+  </div>
+  <div class="panel">
+    <div class="panel-header"><div><h2>Your assessments</h2><p>Room codes and submitted candidate results.</p></div><button class="secondary small" onclick="renderRecruiter()">Refresh</button></div>
+    <div id="assessmentList"></div>
+  </div>
+</section>
+
+<section id="candidateJoin" class="page">
+  <div class="page-head"><div><div class="eyebrow">Candidate workspace</div><h2>Join an assessment</h2><p>Enter the private room code shared by your recruiter.</p></div><button class="secondary" onclick="logout()">Sign out</button></div>
+  <div class="panel" style="max-width:650px">
+    <form id="joinForm">
+      <div class="field"><label for="roomCode">Assessment room code</label><input id="roomCode" required maxlength="8" placeholder="e.g. A7K9Q2" style="text-transform:uppercase;letter-spacing:3px"></div>
+      <button class="primary" type="submit">Find assessment</button>
+      <div id="joinMsg" class="notice hidden"></div>
+    </form>
+    <div id="joinDetails" class="hidden"></div>
+  </div>
+</section>
+
+<section id="candidateSetup" class="page">
+  <div class="page-head"><div><div class="eyebrow">Candidate setup</div><h2>Prepare for your assessment</h2><p>Upload your resume and review the recording requirements.</p></div></div>
+  <div class="panel">
+    <div id="candidateAssessmentInfo"></div>
+    <form id="resumeForm">
+      <div class="field"><label for="resumeFile">Upload resume (.docx only)</label><input id="resumeFile" type="file" accept=".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document" required></div>
+      <div id="resumeMsg" class="notice info">Your resume will be read in this browser to personalize interview prompts.</div>
+      <div class="field"><label for="candidateInstructions">Anything else you want to tell the interviewer? (optional)</label><textarea id="candidateInstructions" placeholder="Relevant experience, projects, or context"></textarea></div>
+      <button class="primary" type="submit">Continue to recording consent</button>
+    </form>
+  </div>
+</section>
+
+<section id="consentPage" class="page">
+  <div class="page-head"><div><div class="eyebrow">Required before starting</div><h2>Camera, microphone and recording consent</h2><p>Your full assessment session will be recorded.</p></div></div>
+  <div class="panel">
+    <div class="notice info">Recording begins before the MCQ test and continues through the spoken interview. The recording is saved in this browser and made available in the recruiter result portal on this same browser. Keep this tab open until the submission is complete.</div>
+    <div class="field"><label><input type="checkbox" id="consentCheck"> I understand and consent to camera and microphone recording for this assessment.</label></div>
+    <div class="field"><label><input type="checkbox" id="privacyCheck"> I understand that this prototype stores assessment data in this browser and does not securely upload it to a remote server.</label></div>
+    <div class="grid2">
+      <div><h3>Camera preview</h3><div class="video-wrap"><video id="previewVideo" autoplay muted playsinline></video></div></div>
+      <div><h3>Before you start</h3><p>• Allow camera and microphone access.</p><p>• Keep your face and voice clear.</p><p>• Do not close or reload the tab.</p><p>• Recording cannot be skipped.</p><div id="mediaMsg" class="notice info">Select both consent boxes, then start the assessment.</div></div>
+    </div>
+    <div class="form-actions"><button class="primary" id="startMedia" onclick="startMedia()">Enable camera & microphone & start test</button><button class="secondary" onclick="showPage('candidateSetup')">Back</button></div>
+  </div>
+</section>
+
+<section id="mcqPage" class="page">
+  <div class="page-head">
+    <div><div class="eyebrow">Knowledge assessment</div><h2 id="mcqHeading">Multiple-choice questions</h2><p id="mcqSubheading">Select one answer for each question.</p></div>
+    <div class="pill"><span class="recording-dot"></span>Recording active</div>
+  </div>
+  <div class="panel">
+    <div class="grid2"><div><span class="muted tiny">QUESTION</span><h3 id="mcqCounter">1 of 5</h3></div><div style="text-align:right"><span class="muted tiny">TIME REMAINING</span><h3 id="mcqTimer">10:00</h3></div></div>
+    <div class="progress"><span id="mcqProgress"></span></div>
+    <div id="mcqQuestion" class="question"></div>
+    <div id="mcqOptions"></div>
+    <div class="form-actions"><button class="secondary" id="mcqPrevious" onclick="moveMCQ(-1)">Previous</button><button class="primary" id="mcqNext" onclick="moveMCQ(1)">Next question</button><button class="primary hidden" id="mcqFinish" onclick="finishMCQ()">Finish MCQs</button></div>
+  </div>
+</section>
+
+<section id="interviewPage" class="page">
+  <div class="page-head"><div><div class="eyebrow">Spoken interview</div><h2>Interview questions</h2><p>Answer each prompt aloud. Your camera and microphone recording remains active.</p></div><div class="pill"><span class="recording-dot"></span>Recording active</div></div>
+  <div class="answer-layout">
+    <div class="panel">
+      <div class="grid2"><div><span class="muted tiny">QUESTION</span><h3 id="interviewCounter">1 of 3</h3></div><div style="text-align:right"><span class="muted tiny">TIME REMAINING</span><h3 id="interviewTimer">10:00</h3></div></div>
+      <div class="progress"><span id="interviewProgress"></span></div>
+      <div class="question" id="interviewQuestion"></div>
+      <div class="notice info">Please answer aloud. You may use the navigation buttons to move between prompts. The complete session is recorded continuously.</div>
+      <div class="form-actions"><button class="secondary" onclick="moveInterview(-1)" id="interviewPrevious">Previous</button><button class="primary" onclick="moveInterview(1)" id="interviewNext">Next question</button><button class="primary hidden" onclick="finishAssessment(false)" id="interviewFinish">Submit assessment</button></div>
+    </div>
+    <div class="panel">
+      <h3>Camera preview</h3><div class="video-wrap"><video id="answerPreview" autoplay muted playsinline></video></div>
+      <p class="tiny"><span class="recording-dot"></span>Recording is active for the whole assessment.</p>
+      <div id="interviewMsg" class="notice info">Answer each question clearly. Your recording includes the MCQ and interview stages.</div>
+    </div>
+  </div>
+</section>
+
+<section id="complete" class="page">
+  <div class="panel" style="max-width:700px;margin:40px auto;text-align:center">
+    <div class="logo" style="margin:0 auto 20px">✓</div><div class="eyebrow">Submission complete</div><h2>Thank you for completing the assessment.</h2>
+    <p id="completionSummary">Your assessment has been submitted.</p>
+    <div class="notice info">Your results and recording are stored locally in this browser. The recruiter can review them from the recruiter portal on this browser.</div>
+    <button class="primary" onclick="goToDashboard()">Return to dashboard</button>
+  </div>
+</section>
+
+<section id="report" class="page">
+  <div class="page-head"><div><div class="eyebrow">Recruiter workspace</div><h2 id="reportTitle">Assessment results</h2><p>Review answers, candidate details, and full-session recordings.</p></div><button class="secondary" onclick="showPage('recruiter');renderRecruiter()">Back to dashboard</button></div>
+  <div id="reportContent"></div>
+</section>
+</main>
+
+<footer>InterviewAI · Browser-based prototype · Handle candidate recordings responsibly</footer>
+
+<script>
+"use strict";
+
+/* ------------------------- Local data storage ------------------------- */
+const STORE = {
+  users: "interviewai_users_v1",
+  current: "interviewai_current_v1",
+  assessments: "interviewai_assessments_v1",
+  submissions: "interviewai_submissions_v1"
+};
+const RECORDING_DB = "InterviewAIRecordings";
+const RECORDING_STORE = "recordings";
+
+function read(key, fallback) {
+  try { const value = localStorage.getItem(key); return value ? JSON.parse(value) : fallback; }
+  catch (e) { console.error(e); return fallback; }
+}
+function write(key, value) { localStorage.setItem(key, JSON.stringify(value)); }
+function users() { return read(STORE.users, []); }
+function assessments() { return read(STORE.assessments, []); }
+function allSubmissions() { return read(STORE.submissions, []); }
+function currentUser() { return read(STORE.current, null); }
+function uid() { return "id_" + Date.now().toString(36) + "_" + Math.random().toString(36).slice(2, 8); }
+function escapeHTML(value) {
+  return String(value ?? "").replace(/[&<>"']/g, char => ({
+    "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+  }[char]));
+}
+function showPage(id) {
+  document.querySelectorAll(".page").forEach(page => page.classList.remove("active"));
+  const page = document.getElementById(id);
+  if (page) page.classList.add("active");
+  window.scrollTo({top:0,behavior:"smooth"});
+}
+function notice(id, message, type="info") {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.className = "notice " + type;
+  el.textContent = message;
+  el.classList.remove("hidden");
+}
+function hideNotice(id) {
+  const el = document.getElementById(id);
+  if (el) el.classList.add("hidden");
+}
+function formatDate(value) {
+  if (!value) return "—";
+  try { return new Date(value).toLocaleString(); } catch (_) { return value; }
+}
+function randomCode() {
+  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+  let code = "";
+  for (let i=0;i<6;i++) code += chars[Math.floor(Math.random()*chars.length)];
+  return code;
+}
+function getAssessment(id) { return assessments().find(item => item.id === id); }
+
+/* ------------------------- Recording database ------------------------- */
+function openRecordingDB() {
+  return new Promise((resolve, reject) => {
+    if (!window.indexedDB) return reject(new Error("IndexedDB is not available in this browser."));
+    const request = indexedDB.open(RECORDING_DB, 1);
+    request.onupgradeneeded = () => {
+      const db = request.result;
+      if (!db.objectStoreNames.contains(RECORDING_STORE)) {
+        db.createObjectStore(RECORDING_STORE, {keyPath:"id"});
+      }
+    };
+    request.onsuccess = () => resolve(request.result);
+    request.onerror = () => reject(request.error || new Error("Could not open recording storage."));
+  });
+}
+async function saveRecording(id, blob, mimeType) {
+  const db = await openRecordingDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(RECORDING_STORE, "readwrite");
+    tx.objectStore(RECORDING_STORE).put({
+      id, blob, mimeType: mimeType || blob.type || "video/webm",
+      savedAt: new Date().toISOString()
+    });
+    tx.oncomplete = () => { db.close(); resolve(true); };
+    tx.onerror = () => { const error=tx.error; db.close(); reject(error); };
+    tx.onabort = () => { const error=tx.error; db.close(); reject(error); };
+  });
+}
+async function getRecording(id) {
+  const db = await openRecordingDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(RECORDING_STORE, "readonly");
+    const request = tx.objectStore(RECORDING_STORE).get(id);
+    request.onsuccess = () => { const result=request.result || null; db.close(); resolve(result); };
+    request.onerror = () => { const error=request.error; db.close(); reject(error); };
+  });
+}
+function recordingExtension(mimeType="") {
+  if (mimeType.includes("mp4")) return "mp4";
+  if (mimeType.includes("webm")) return "webm";
+  return "video";
+}
+async function downloadRecording(id, filename) {
+  try {
+    const item = await getRecording(id);
+    if (!item) return alert("The recording could not be found in this browser.");
+    const url = URL.createObjectURL(item.blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = filename + "." + recordingExtension(item.mimeType);
+    document.body.appendChild(link); link.click(); link.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 60000);
+  } catch (error) {
+    console.error(error);
+    alert("Unable to load the recording. Check browser storage.");
+  }
+}
+function downloadJSON(data, filename) {
+  const blob = new Blob([JSON.stringify(data,null,2)], {type:"application/json"});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a"); a.href=url; a.download=filename+".json";
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url),60000);
+}
+
+/* ------------------------- Authentication ------------------------- */
+let authMode = "login";
+function setAuthMode(mode) {
+  authMode = mode;
+  $("authTitle").textContent = mode === "signup" ? "Create your account" : "Sign in to your account";
+  $("authSubtitle").textContent = mode === "signup" ? "Choose your role and create an account." : "Access your recruiter or candidate dashboard.";
+  $("authSubmit").textContent = mode === "signup" ? "Create account" : "Sign in";
+  $("nameField").classList.toggle("hidden", mode !== "signup");
+  $("roleField").classList.toggle("hidden", mode !== "signup");
+  $("loginTab").style.borderColor = mode === "login" ? "var(--accent)" : "";
+  $("signupTab").style.borderColor = mode === "signup" ? "var(--accent)" : "";
+  hideNotice("authMsg");
+}
+$("authForm").addEventListener("submit", event => {
+  event.preventDefault();
+  const email = $("authEmail").value.trim().toLowerCase();
+  const password = $("authPassword").value;
+  if (authMode === "signup") {
+    const name = $("authName").value.trim();
+    const role = $("authRole").value;
+    if (!name) return notice("authMsg","Please enter your full name.","error");
+    const all = users();
+    if (all.some(user => user.email === email)) return notice("authMsg","An account with this email already exists.","error");
+    const user = {id:uid(),name,email,password,role,createdAt:new Date().toISOString()};
+    all.push(user); write(STORE.users,all);
+    write(STORE.current,{id:user.id,name:user.name,email:user.email,role:user.role});
+    enterDashboard();
+  } else {
+    const user = users().find(item => item.email === email && item.password === password);
+    if (!user) return notice("authMsg","Email or password is incorrect. If you have not registered, create an account first.","error");
+    write(STORE.current,{id:user.id,name:user.name,email:user.email,role:user.role});
+    enterDashboard();
+  }
+});
+function logout() {
+  localStorage.removeItem(STORE.current);
+  currentAssessmentId=null;
+  activeSubmission=null;
+  showPage("home");
+  updateNav();
+}
+function updateNav() {
+  const user = currentUser();
+  $("navActions").innerHTML = user
+    ? `<span class="muted tiny">${escapeHTML(user.name)} · ${escapeHTML(user.role)}</span>
+       <button class="secondary" onclick="goToDashboard()">Dashboard</button>
+       <button class="secondary" onclick="logout()">Sign out</button>`
+    : `<button class="secondary" onclick="showPage('home')">Home</button>
+       <button class="secondary" onclick="showPage('auth');setAuthMode('login')">Sign in</button>
+       <button class="primary" onclick="showPage('auth');setAuthMode('signup')">Create account</button>`;
+}
+function enterDashboard() {
+  updateNav();
+  const user=currentUser();
+  if (!user) return showPage("auth");
+  if (user.role==="recruiter") { renderRecruiter(); showPage("recruiter"); }
+  else showPage("candidateJoin");
+}
+function goToDashboard() {
+  const user=currentUser();
+  if (!user) return showPage("auth");
+  if (user.role==="recruiter") { renderRecruiter(); showPage("recruiter"); }
+  else showPage("candidateJoin");
+}
+
+/* ------------------------- Recruiter assessment creation ------------------------- */
+$("assessmentForm").addEventListener("submit", event => {
+  event.preventDefault();
+  const user=currentUser();
+  if (!user || user.role!=="recruiter") return showPage("auth");
+  const list=assessments();
+  let code=randomCode();
+  while(list.some(item=>item.code===code)) code=randomCode();
+  const assessment={
+    id:uid(), recruiterId:user.id, recruiterName:user.name,
+    jobTitle:$("jobTitle").value.trim(), domain:$("domain").value.trim(),
+    level:$("level").value, mcqCount:Number($("mcqCount").value),
+    interviewCount:Number($("interviewCount").value),
+    mcqMinutes:Number($("mcqMinutes").value),
+    interviewMinutes:Number($("interviewMinutes").value),
+    notes:$("assessmentNotes").value.trim(), code,
+    createdAt:new Date().toISOString()
+  };
+  list.push(assessment); write(STORE.assessments,list);
+  $("assessmentForm").reset();
+  notice("createMsg","Assessment created successfully. Room code: "+code,"success");
+  renderRecruiter();
+});
+function renderRecruiter() {
+  const user=currentUser();
+  if (!user || user.role!=="recruiter") return;
+  const list=assessments().filter(item=>item.recruiterId===user.id);
+  const subs=allSubmissions().filter(item=>list.some(a=>a.id===item.assessmentId));
+  $("statAssessments").textContent=list.length;
+  $("statCandidates").textContent=subs.length;
+  $("statCompleted").textContent=subs.filter(item=>item.status==="completed").length;
+  if (!list.length) {
+    $("assessmentList").innerHTML='<div class="notice info">You have not created an assessment yet. Use the form above to create one.</div>';
+    return;
+  }
+  $("assessmentList").innerHTML=list.slice().reverse().map(item=>{
+    const related=subs.filter(sub=>sub.assessmentId===item.id);
+    return `<div class="assessment-card">
+      <div class="panel-header"><div><h3>${escapeHTML(item.jobTitle)}</h3><p>${escapeHTML(item.domain)} · ${escapeHTML(item.level)}</p></div><span class="pill">${related.length} submission(s)</span></div>
+      <p class="tiny">Created ${escapeHTML(formatDate(item.createdAt))}</p>
+      <p>Private room code</p><div class="code">${escapeHTML(item.code)}</div>
+      <p class="tiny">MCQs: ${item.mcqCount} · Interview questions: ${item.interviewCount} · MCQ time: ${item.mcqMinutes} min · Interview time: ${item.interviewMinutes} min</p>
+      <div class="form-actions">
+        <button class="primary small" onclick="viewAssessment('${item.id}')">View results</button>
+        <button class="secondary small" onclick="copyCode('${item.code}')">Copy room code</button>
+      </div>
+    </div>`;
+  }).join("");
+}
+async function copyCode(code) {
+  try { await navigator.clipboard.writeText(code); alert("Room code copied: "+code); }
+  catch (_) { prompt("Copy this room code:",code); }
+}
+
+/* ------------------------- Candidate joining and resume ------------------------- */
+let currentAssessmentId=null;
+let candidateResumeText="";
+let candidateInstructions="";
+$("joinForm").addEventListener("submit",event=>{
+  event.preventDefault();
+  const code=$("roomCode").value.trim().toUpperCase();
+  const assessment=assessments().find(item=>item.code===code);
+  if (!assessment) {
+    notice("joinMsg","No assessment was found for that room code. Check the code and try again.","error");
+    $("joinDetails").classList.add("hidden");
+    return;
+  }
+  currentAssessmentId=assessment.id;
+  $("joinDetails").classList.remove("hidden");
+  $("joinDetails").innerHTML=`<div class="assessment-card">
+    <h3>${escapeHTML(assessment.jobTitle)}</h3><p>${escapeHTML(assessment.domain)} · ${escapeHTML(assessment.level)}</p>
+    <p>${assessment.mcqCount} MCQs · ${assessment.interviewCount} spoken interview questions</p>
+    <div class="form-actions"><button class="primary" onclick="openCandidateSetup()">Continue to setup</button></div>
+  </div>`;
+  notice("joinMsg","Assessment found. Review the details, then continue.","success");
+});
+function openCandidateSetup() {
+  const assessment=getAssessment(currentAssessmentId);
+  if (!assessment) return showPage("candidateJoin");
+  $("candidateAssessmentInfo").innerHTML=`<h3>${escapeHTML(assessment.jobTitle)}</h3>
+    <p>${escapeHTML(assessment.domain)} · ${escapeHTML(assessment.level)}</p>
+    ${assessment.notes?`<div class="notice info">${escapeHTML(assessment.notes)}</div>`:""}
+    <p class="tiny">The resume must be a DOCX file. Camera and microphone access will be required before starting.</p>`;
+  $("resumeFile").value="";
+  $("candidateInstructions").value="";
+  $("resumeMsg").className="notice info";
+  $("resumeMsg").textContent="Your resume will be read in this browser to personalize interview prompts.";
+  showPage("candidateSetup");
+}
+$("resumeForm").addEventListener("submit",async event=>{
+  event.preventDefault();
+  const file=$("resumeFile").files[0];
+  if (!file) return notice("resumeMsg","Please upload a DOCX resume.","error");
+  if (!file.name.toLowerCase().endsWith(".docx")) return notice("resumeMsg","Only .docx files are supported.","error");
+  if (!window.mammoth) return notice("resumeMsg","The DOCX reader could not load. Check your internet connection and reload the page.","error");
+  try {
+    notice("resumeMsg","Reading resume…","info");
+    const arrayBuffer=await file.arrayBuffer();
+    const result=await mammoth.extractRawText({arrayBuffer});
+    candidateResumeText=(result.value||"").trim();
+    if (!candidateResumeText) return notice("resumeMsg","No readable text was found in this DOCX file. Try another resume.","error");
+    candidateInstructions=$("candidateInstructions").value.trim();
+    notice("resumeMsg","Resume read successfully. "+candidateResumeText.length+" characters extracted.","success");
+    $("consentCheck").checked=false;
+    $("privacyCheck").checked=false;
+    $("startMedia").disabled=false;
+    showPage("consentPage");
+  } catch(error) {
+    console.error(error);
+    notice("resumeMsg","Unable to read this DOCX file. Please try another file.","error");
+  }
+});
+
+/* ------------------------- Question generation ------------------------- */
+const questionBank = [
+ {q:"Which practice most helps keep code maintainable as a project grows?",o:["Use clear names and small, focused functions","Put all logic in one large function","Avoid testing","Duplicate code whenever possible"],a:0},
+ {q:"What is the main purpose of version control such as Git?",o:["Increase screen resolution","Track changes and collaborate on code","Replace all testing","Host every database automatically"],a:1},
+ {q:"When investigating a bug, what is a strong first step?",o:["Rewrite the entire application","Ignore the error","Reproduce the issue and inspect relevant evidence","Delete the test suite"],a:2},
+ {q:"What is the purpose of an API?",o:["A way for software systems to communicate","A type of monitor","A replacement for all databases","A file compression format"],a:0},
+ {q:"Why are automated tests useful?",o:["They guarantee there will never be bugs","They can repeatedly check expected behavior","They remove the need for requirements","They always make software faster"],a:1},
+ {q:"Which approach is generally best when handling sensitive user data?",o:["Store it in publicly accessible files","Collect everything without a reason","Limit access and collect only what is needed","Share credentials with the whole team"],a:2},
+ {q:"What does responsive web design aim to achieve?",o:["A site that works across different screen sizes","A site that only works on desktop","A site without CSS","A site that disables keyboard input"],a:0},
+ {q:"What is a database index mainly used for?",o:["Decorating a user interface","Improving retrieval speed for suitable queries","Encrypting every network request","Replacing data backups"],a:1},
+ {q:"What should a useful code review focus on?",o:["Only the author's typing speed","Finding improvements in correctness, clarity, and maintainability","Changing every line regardless of need","Avoiding questions"],a:1},
+ {q:"What is a sensible response to a production incident?",o:["Hide the issue","Make untested changes without checking impact","Assess impact, communicate, and investigate safely","Delete all logs immediately"],a:2}
+];
+function makeMCQs(assessment) {
+  const seed = [
+    {q:`For a ${assessment.jobTitle} role, what is a good way to approach an unfamiliar technical problem?`,o:["Clarify requirements, break it into parts, and test assumptions","Guess and avoid checking the result","Skip understanding the requirements","Change unrelated components first"],a:0},
+    {q:`In ${assessment.domain}, why is it important to validate inputs?`,o:["It removes the need for documentation","It helps catch invalid data and reduces unexpected behavior","It guarantees unlimited performance","It replaces user feedback"],a:1}
+  ];
+  const pool=seed.concat(questionBank);
+  const shuffled=pool.slice().sort(()=>Math.random()-.5);
+  return shuffled.slice(0,Math.min(assessment.mcqCount,shuffled.length));
+}
+function makeInterviewQuestions(assessment,resumeText,instructions) {
+  const role=assessment.jobTitle, domain=assessment.domain;
+  const resumeExcerpt=resumeText.split(/\s+/).slice(0,45).join(" ");
+  const prompts=[
+    `Please introduce yourself and explain how your experience prepares you for the ${role} position.`,
+    `Tell me about a project or challenge related to ${domain}. What was your contribution, and what was the outcome?`,
+    `Describe a difficult problem you solved. How did you investigate it, evaluate options, and decide on a solution?`,
+    `How would you approach a new task in ${domain} when the requirements are incomplete or unclear?`,
+    `Describe a time you received feedback or had to learn a new skill quickly. What did you do?`
+  ];
+  const result=prompts.slice(0,assessment.interviewCount);
+  if (resumeExcerpt && result.length>1) {
+    result[1]=`Your resume mentions this experience: “${resumeExcerpt}”. Please explain your role, the decisions you made, and the results.`;
+  }
+  if (instructions && result.length>2) result[2]+=` Also consider this context you shared: ${instructions.slice(0,180)}.`;
+  return result;
+}
+
+/* ------------------------- Continuous recording and assessment state ------------------------- */
+let mediaStream=null;
+let fullRecorder=null;
+let fullChunks=[];
+let activeSubmission=null;
+let mcqQuestions=[];
+let interviewQuestions=[];
+let mcqIndex=0;
+let interviewIndex=0;
+let mcqAnswers={};
+let mcqRemaining=0;
+let interviewRemaining=0;
+let mcqInterval=null;
+let interviewInterval=null;
+let finalizing=false;
+
+function $(id) { return document.getElementById(id); }
+function startTimer(which) {
+  stopTimer(which);
+  const tick=()=>{
+    if (which==="mcq") {
+      mcqRemaining=Math.max(0,mcqRemaining-1);
+      $("mcqTimer").textContent=timerText(mcqRemaining);
+      if(mcqRemaining<=0) finishMCQ(true);
+    } else {
+      interviewRemaining=Math.max(0,interviewRemaining-1);
+      $("interviewTimer").textContent=timerText(interviewRemaining);
+      if(interviewRemaining<=0) finishAssessment(true);
+    }
+  };
+  if(which==="mcq") mcqInterval=setInterval(tick,1000);
+  else interviewInterval=setInterval(tick,1000);
+}
+function stopTimer(which) {
+  if(which==="mcq"&&mcqInterval){clearInterval(mcqInterval);mcqInterval=null;}
+  if(which==="interview"&&interviewInterval){clearInterval(interviewInterval);interviewInterval=null;}
+}
+function stopTimers(){stopTimer("mcq");stopTimer("interview");}
+function timerText(seconds){return Math.floor(seconds/60).toString().padStart(2,"0")+":"+Math.floor(seconds%60).toString().padStart(2,"0");}
+
+async function startMedia() {
+  if (!$("consentCheck").checked || !$("privacyCheck").checked) {
+    return notice("mediaMsg","Both consent boxes are required before starting.","error");
+  }
+  const button=$("startMedia");
+  button.disabled=true;
+  try {
+    if (!navigator.mediaDevices?.getUserMedia) throw new Error("Camera and microphone access requires a supported browser and a secure context, such as HTTPS or localhost.");
+    if (!window.MediaRecorder) throw new Error("This browser does not support MediaRecorder.");
+    if (!currentAssessmentId || !getAssessment(currentAssessmentId)) throw new Error("Assessment not found. Please join the assessment again.");
+    mediaStream=await navigator.mediaDevices.getUserMedia({video:true,audio:true});
+    $("previewVideo").srcObject=mediaStream;
+    $("answerPreview").srcObject=mediaStream;
+    const supportedTypes=["video/mp4","video/webm;codecs=vp9,opus","video/webm;codecs=vp8,opus","video/webm"];
+    const mimeType=supportedTypes.find(type=>MediaRecorder.isTypeSupported(type));
+    fullChunks=[];
+    fullRecorder=new MediaRecorder(mediaStream,mimeType?{mimeType}:undefined);
+    fullRecorder.ondataavailable=event=>{
+      if(event.data&&event.data.size>0) fullChunks.push(event.data);
+    };
+    fullRecorder.onerror=event=>{
+      console.error("MediaRecorder error:",event.error||event);
+      notice("mediaMsg","The browser reported a recording error. The assessment may not be saved completely.","error");
+    };
+    fullRecorder.start(1000);
+    const user=currentUser();
+    const assessment=getAssessment(currentAssessmentId);
+    activeSubmission={
+      id:uid(),assessmentId:assessment.id,assessmentCode:assessment.code,
+      candidateId:user?.id||null,candidateName:user?.name||"Candidate",
+      candidateEmail:user?.email||"",jobTitle:assessment.jobTitle,domain:assessment.domain,
+      level:assessment.level,status:"in-progress",startedAt:new Date().toISOString(),
+      resumeText:candidateResumeText, candidateInstructions,
+      questions:[],mcqAnswers:{},mcqScore:0,mcqTotal:0
+    };
+    notice("mediaMsg","Recording is active. Your full assessment, including MCQs and the spoken interview, is being recorded.","success");
+    beginMCQ();
+  } catch(error) {
+    console.error("Recording setup failed:",error);
+    notice("mediaMsg",(error.message||"Unable to start recording.")+" Please enable camera and microphone permissions, then try again.","error");
+    button.disabled=false;
+    if(mediaStream){mediaStream.getTracks().forEach(track=>track.stop());mediaStream=null;}
+  }
+}
+function beginMCQ() {
+  const assessment=getAssessment(currentAssessmentId);
+  mcqQuestions=makeMCQs(assessment);
+  mcqIndex=0;mcqAnswers={};
+  mcqRemaining=assessment.mcqMinutes*60;
+  $("mcqHeading").textContent=assessment.jobTitle+" — Knowledge assessment";
+  $("mcqSubheading").textContent=assessment.domain+" · "+assessment.level;
+  showPage("mcqPage");
+  renderMCQ();
+  startTimer("mcq");
+}
+function renderMCQ() {
+  const item=mcqQuestions[mcqIndex];
+  if(!item)return;
+  $("mcqCounter").textContent=`${mcqIndex+1} of ${mcqQuestions.length}`;
+  $("mcqProgress").style.width=((mcqIndex+1)/mcqQuestions.length*100)+"%";
+  $("mcqQuestion").textContent=item.q;
+  $("mcqOptions").innerHTML=item.o.map((option,index)=>`
+    <label class="option"><input type="radio" name="mcqOption" value="${index}" ${mcqAnswers[mcqIndex]===index?"checked":""}>
+    <span>${escapeHTML(option)}</span></label>`).join("");
+  $("mcqPrevious").disabled=mcqIndex===0;
+  $("mcqNext").classList.toggle("hidden",mcqIndex===mcqQuestions.length-1);
+  $("mcqFinish").classList.toggle("hidden",mcqIndex!==mcqQuestions.length-1);
+}
+function storeCurrentMCQ() {
+  const checked=document.querySelector('input[name="mcqOption"]:checked');
+  if(checked)mcqAnswers[mcqIndex]=Number(checked.value);
+  else delete mcqAnswers[mcqIndex];
+}
+function moveMCQ(delta) {
+  storeCurrentMCQ();
+  const next=mcqIndex+delta;
+  if(next<0||next>=mcqQuestions.length)return;
+  mcqIndex=next;renderMCQ();
+}
+function finishMCQ(auto=false) {
+  if(!activeSubmission || $("mcqPage").classList.contains("hidden")) return;
+  storeCurrentMCQ();
+  stopTimer("mcq");
+  const assessment=getAssessment(currentAssessmentId);
+  const answerSheet=mcqQuestions.map((question,index)=>({
+    question:question.q,options:question.o,correctIndex:question.a,
+    selectedIndex:mcqAnswers[index]??null,
+    correct:(mcqAnswers[index]??null)===question.a
+  }));
+  const score=answerSheet.filter(item=>item.correct).length;
+  activeSubmission.mcqAnswers=mcqAnswers;
+  activeSubmission.mcqAnswerSheet=answerSheet;
+  activeSubmission.mcqScore=score;
+  activeSubmission.mcqTotal=mcqQuestions.length;
+  activeSubmission.mcqQuestions=mcqQuestions;
+  activeSubmission.mcqAutoSubmitted=!!auto;
+  interviewQuestions=makeInterviewQuestions(assessment,candidateResumeText,candidateInstructions);
+  interviewIndex=0;
+  interviewRemaining=assessment.interviewMinutes*60;
+  showPage("interviewPage");
+  renderInterview();
+  startTimer("interview");
+}
+function renderInterview() {
+  const question=interviewQuestions[interviewIndex];
+  if(!question)return;
+  $("interviewCounter").textContent=`${interviewIndex+1} of ${interviewQuestions.length}`;
+  $("interviewProgress").style.width=((interviewIndex+1)/interviewQuestions.length*100)+"%";
+  $("interviewQuestion").textContent=question;
+  $("interviewPrevious").disabled=interviewIndex===0;
+  $("interviewNext").classList.toggle("hidden",interviewIndex===interviewQuestions.length-1);
+  $("interviewFinish").classList.toggle("hidden",interviewIndex!==interviewQuestions.length-1);
+}
+function moveInterview(delta) {
+  const next=interviewIndex+delta;
+  if(next<0||next>=interviewQuestions.length)return;
+  interviewIndex=next;renderInterview();
+}
+
+/* ------------------------- Final submission and saving ------------------------- */
+async function finishAssessment(auto=false) {
+  if(!activeSubmission || finalizing)return;
+  finalizing=true;
+  stopTimers();
+  $("interviewFinish").disabled=true;
+  $("interviewNext").disabled=true;
+  $("interviewPrevious").disabled=true;
+  $("interviewMsg").textContent="Finishing assessment and saving your full-session recording. Please keep this tab open.";
+  await finalizeSubmission(auto);
+}
+async function finalizeSubmission(auto=false) {
+  if(!activeSubmission)return;
+  const submission=activeSubmission;
+  submission.status="completed";
+  submission.completedAt=new Date().toISOString();
+  submission.autoSubmitted=!!auto;
+  submission.interviewQuestions=interviewQuestions.slice();
+  submission.interviewQuestionCount=interviewQuestions.length;
+  submission.interviewIndexAtSubmit=interviewIndex;
+  submission.recordingSaved=false;
+  submission.recordingMimeType=fullRecorder?.mimeType||"";
+  submission.resumeTextLength=(submission.resumeText||"").length;
+  let saveError=null;
+
+  const saveEverything=async()=>{
+    try {
+      if(fullChunks.length>0) {
+        const mimeType=fullRecorder?.mimeType||fullChunks[0]?.type||"video/webm";
+        const videoBlob=new Blob(fullChunks,{type:mimeType});
+        await saveRecording(submission.id,videoBlob,mimeType);
+        submission.recordingSaved=true;
+        submission.recordingMimeType=mimeType;
+        submission.recordingSizeBytes=videoBlob.size;
+      } else {
+        saveError="No video data was produced by the browser recorder.";
+      }
+    } catch(error) {
+      console.error("Could not save full-session recording:",error);
+      saveError=error.message||"Recording could not be saved in browser storage.";
+      submission.recordingError=saveError;
+    }
+
+    const all=allSubmissions();
+    const existing=all.findIndex(item=>item.id===submission.id);
+    if(existing>=0)all[existing]=submission;else all.push(submission);
+    try {
+      write(STORE.submissions,all);
+    } catch(error) {
+      console.error("Could not save submission metadata:",error);
+      alert("The assessment finished, but submission details could not be saved. Browser storage may be full.");
+    }
+
+    const score=submission.mcqScore||0,total=submission.mcqTotal||0;
+    $("completionSummary").textContent=`MCQ score: ${score}/${total}. `+
+      (submission.recordingSaved
+        ?`Full-session recording saved (${recordingExtension(submission.recordingMimeType).toUpperCase()}).`
+        :"Full-session recording could not be saved. "+(saveError||"Please check browser storage."));
+    if(mediaStream){mediaStream.getTracks().forEach(track=>track.stop());mediaStream=null;}
+    $("previewVideo").srcObject=null;
+    $("answerPreview").srcObject=null;
+    activeSubmission=null;
+    fullRecorder=null;
+    fullChunks=[];
+    finalizing=false;
+    showPage("complete");
+  };
+
+  if(fullRecorder && fullRecorder.state!=="inactive") {
+    fullRecorder.addEventListener("stop",saveEverything,{once:true});
+    try { fullRecorder.stop(); }
+    catch(error) { console.error(error); await saveEverything(); }
+  } else {
+    await saveEverything();
+  }
+}
+
+/* ------------------------- Recruiter result portal ------------------------- */
+async function viewAssessment(id) {
+  const assessment=getAssessment(id);
+  const user=currentUser();
+  if(!assessment||!user||assessment.recruiterId!==user.id)return;
+  const submissions=allSubmissions().filter(item=>item.assessmentId===id);
+  $("reportTitle").textContent=assessment.jobTitle+" — Results";
+  const content=$("reportContent");
+  if(!submissions.length) {
+    content.innerHTML='<div class="panel"><div class="notice info">No candidates have submitted this assessment yet.</div></div>';
+    showPage("report");
+    return;
+  }
+  content.innerHTML=submissions.slice().reverse().map(s=>{
+    const answerSheet=s.mcqAnswerSheet||[];
+    const review=answerSheet.map((answer,index)=>`
+      <div class="report-item">
+        <strong>Q${index+1}. ${escapeHTML(answer.question)}</strong>
+        <p>Candidate answer: ${answer.selectedIndex===null||answer.selectedIndex===undefined?"Not answered":escapeHTML(answer.options?.[answer.selectedIndex]||"Unknown")}</p>
+        <p>Correct answer: ${escapeHTML(answer.options?.[answer.correctIndex]||"Unknown")}</p>
+        <span class="pill ${answer.correct?"green":""}">${answer.correct?"Correct":"Incorrect / unanswered"}</span>
+      </div>`).join("");
+    const interview=(s.interviewQuestions||[]).map((q,index)=>`
+      <div class="report-item"><strong>Interview prompt ${index+1}</strong><p>${escapeHTML(q)}</p></div>`).join("");
+    return `<div class="panel">
+      <div class="panel-header"><div><h2>${escapeHTML(s.candidateName||"Candidate")}</h2>
+        <p>${escapeHTML(s.candidateEmail||"No email")} · ${escapeHTML(s.status||"unknown")}</p></div>
+        <span class="pill">${s.mcqScore??0}/${s.mcqTotal??0} MCQs</span>
+      </div>
+      <div class="grid3">
+        <div class="stat"><strong>${s.mcqScore??0}/${s.mcqTotal??0}</strong><span>MCQ score</span></div>
+        <div class="stat"><strong>${escapeHTML(s.level||assessment.level)}</strong><span>Assessment level</span></div>
+        <div class="stat"><strong>${s.recordingSaved?"Saved":"Unavailable"}</strong><span>Full-session recording</span></div>
+      </div>
+      <p class="tiny">Started: ${escapeHTML(formatDate(s.startedAt))}<br>Completed: ${escapeHTML(formatDate(s.completedAt))}</p>
+      <div class="form-actions"><button class="secondary small" onclick="downloadJSON(findSubmission('${s.id}'),'InterviewAI-result-${s.id}')">Download result JSON</button></div>
+      <hr><h3>Full assessment recording</h3>
+      <div id="recording-status-${s.id}" class="notice info">Checking recording availability…</div>
+      <div id="recording-player-${s.id}"></div>
+      <hr><h3>MCQ answer sheet</h3>
+      ${review||'<p class="muted">No MCQ answer sheet was saved.</p>'}
+      <hr><h3>Spoken interview prompts</h3>
+      ${interview||'<p class="muted">No interview prompt details were saved.</p>'}
+      <hr><h3>Resume text extracted</h3>
+      <p class="tiny">The extracted resume text is stored locally in this browser. Review it only for legitimate hiring purposes.</p>
+      <pre>${escapeHTML(s.resumeText||"No resume text available.")}</pre>
+    </div>`;
+  }).join("");
+
+  showPage("report");
+
+  for(const submission of submissions) {
+    const status=$("recording-status-"+submission.id);
+    const player=$("recording-player-"+submission.id);
+    if(!status||!player)continue;
+    try {
+      const recording=await getRecording(submission.id);
+      if(!recording) {
+        status.className="notice info";
+        status.textContent="No saved full-session recording was found in this browser.";
+        continue;
+      }
+      const videoUrl=URL.createObjectURL(recording.blob);
+      status.className="notice success";
+      status.textContent=`Recording available · ${recordingExtension(recording.mimeType).toUpperCase()} · ${(recording.blob.size/1024/1024).toFixed(1)} MB`;
+      player.innerHTML=`<div class="video-wrap"><video controls playsinline preload="metadata"><source src="${videoUrl}" type="${escapeHTML(recording.mimeType)}">Your browser cannot play this recording format.</video></div>
+        <div class="form-actions"><button class="primary small" onclick="downloadRecording('${submission.id}','InterviewAI-${submission.id}')">Download full recording</button></div>`;
+    } catch(error) {
+      console.error("Recording retrieval failed:",error);
+      status.className="notice error";
+      status.textContent="Could not load this recording.";
+    }
+  }
+}
+function findSubmission(id) {
+  return allSubmissions().find(item=>item.id===id)||{};
+}
+
+/* ------------------------- Initial application state ------------------------- */
+function initialize() {
+  updateNav();
+  const user=currentUser();
+  if(user) {
+    // Restore the relevant portal, but do not restart an assessment automatically.
+    if(user.role==="recruiter") {renderRecruiter();showPage("recruiter");}
+    else showPage("candidateJoin");
+  } else {
+    showPage("home");
+  }
+}
+window.addEventListener("beforeunload",event=>{
+  if(fullRecorder&&fullRecorder.state==="recording") {
+    event.preventDefault();
+    event.returnValue="";
+  }
+});
+initialize();
+</script>
+</body>
+</html>
